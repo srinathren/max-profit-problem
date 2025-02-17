@@ -1,96 +1,136 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
+    // Constants for building properties
+    private static final int THEATRE_TIME = 5;
+    private static final int PUB_TIME = 4;
+    private static final int COMMERCIAL_PARK_TIME = 10;
+
+    private static final int THEATRE_EARNING = 1500;
+    private static final int PUB_EARNING = 1000;
+    private static final int COMMERCIAL_PARK_EARNING = 3000;
+
+    static class Solution {
+        int theatres;
+        int pubs;
+        int commercialParks;
+        int earnings;
+
+        Solution(int t, int p, int c, int e) {
+            this.theatres = t;
+            this.pubs = p;
+            this.commercialParks = c;
+            this.earnings = e;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("T: %d P: %d C: %d", theatres, pubs, commercialParks);
+        }
+    }
 
     /**
-     * Computes the maximum profit solutions based on the given time units.
+     * Finds the optimal development plan for the given time units.
      *
-     * @param n Total available time units
-     * @return {@link List} of {@link String} containing optimal solutions
+     * @param timeUnits The available time units.
+     * @return {@link List} of {@link Solution} containing the optimal solutions.
      */
-    public static List<String> maxProfit(int n) {
-        int maxProfit = 0;
-        List<String> solutions = new ArrayList<>();
+    public static List<Solution> findOptimalDevelopment(int timeUnits) {
+        List<Solution> optimalSolutions = new ArrayList<>();
+        int maxEarnings = 0;
 
-        // Try all possible numbers of Theatres (T)
-        for (int T = 0; T <= n / 5; T++) {
-            for (int P = 0; P <= n / 4; P++) {
-                for (int C = 0; C <= n / 10; C++) {
-                    int totalTime = (T * 5) + (P * 4) + (C * 10);
+        // Try all possible combinations
+        for (int t = 0; t <= timeUnits / THEATRE_TIME; t++) {
+            for (int p = 0; p <= timeUnits / PUB_TIME; p++) {
+                for (int c = 0; c <= timeUnits / COMMERCIAL_PARK_TIME; c++) {
+                    int time = 0;
+                    int earnings = 0;
 
-                    // Check if total build time is within available time
-                    if (totalTime <= n) {
-                        // Calculate operational time
-                        int operationalTimeT = Math.max(0, n - (T * 5));
-                        int operationalTimeP = Math.max(0, n - (P * 4));
-                        int operationalTimeC = Math.max(0, n - (C * 10));
-
-                        // Calculate earnings
-                        int profit = (T * 1500 * operationalTimeT) +
-                                (P * 1000 * operationalTimeP) +
-                                (C * 3000 * operationalTimeC);
-
-                        // If we find a better profit, reset solutions list
-                        if (profit > maxProfit) {
-                            maxProfit = profit;
-                            solutions.clear(); // Clear previous results
-                            solutions.add("T: " + T + ", P: " + P + ", C: " + C + ", Earnings: $" + profit);
+                    // Build theatres sequentially
+                    for (int i = 0; i < t; i++) {
+                        time += THEATRE_TIME;
+                        if (time < timeUnits) {
+                            earnings += (timeUnits - time) * THEATRE_EARNING;
                         }
-                        // If we find another combination with the same max profit, add it to solutions
-                        else if (profit == maxProfit) {
-                            solutions.add("T: " + T + ", P: " + P + ", C: " + C + ", Earnings: $" + profit);
+                    }
+
+                    // Build pubs sequentially
+                    for (int i = 0; i < p; i++) {
+                        time += PUB_TIME;
+                        if (time < timeUnits) {
+                            earnings += (timeUnits - time) * PUB_EARNING;
+                        }
+                    }
+
+                    // Build commercial parks sequentially
+                    for (int i = 0; i < c; i++) {
+                        time += COMMERCIAL_PARK_TIME;
+                        if (time < timeUnits) {
+                            earnings += (timeUnits - time) * COMMERCIAL_PARK_EARNING;
+                        }
+                    }
+
+                    if (time <= timeUnits) {
+                        if (earnings > maxEarnings) {
+                            maxEarnings = earnings;
+                            optimalSolutions.clear();
+                            optimalSolutions.add(new Solution(t, p, c, earnings));
+                        } else if (earnings == maxEarnings && earnings > 0) {
+                            optimalSolutions.add(new Solution(t, p, c, earnings));
                         }
                     }
                 }
             }
         }
 
-        return solutions;
+        return optimalSolutions;
     }
 
     /**
-     * Displays the results of the maximum profit calculations.
+     * Displays the optimal solutions for a given time unit.
      *
-     * @param n        Total available time units
-     * @param results  {@link List} of {@link String} containing optimal solutions
+     * @param timeUnit The available time units.
+     * @param solutions {@link List} of {@link Solution} containing the results.
      */
-    public static void displayResults(int n, List<String> results) {
-        System.out.println("\nFor Time Unit: " + n);
-        System.out.println("Optimal solutions:");
-        for (String result : results) {
-            System.out.println(result);
+    public static void displayResults(int timeUnit, List<Solution> solutions) {
+        System.out.println("\nFor Time Unit: " + timeUnit);
+        System.out.println("Earnings: $" + (solutions.isEmpty() ? 0 : solutions.get(0).earnings));
+        System.out.println("Solutions:");
+        for (int i = 0; i < solutions.size(); i++) {
+            System.out.println((i + 1) + ". " + solutions.get(i));
         }
         System.out.println("-----------------------------");
     }
 
     /**
-     * Main method to interact with the user and execute the max profit calculation.
-     * The user can continuously input time units and receive results until they
-     * decide to terminate by entering "exit".
-     *
-     * @param args Command-line arguments (not used)
+     * Main method to dynamically accept input from the user until termination.
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            // Ask user for input
             System.out.print("Enter time units (or type 'exit' to stop): ");
 
-            // Check if user wants to exit
             if (scanner.hasNext("exit")) {
                 System.out.println("Exiting program...");
                 break;
             }
 
-            // Read integer input
-            int n = scanner.nextInt();
+            if (scanner.hasNextInt()) {
+                int timeUnit = scanner.nextInt();
+                if (timeUnit <= 0) {
+                    System.out.println("Please enter a positive integer.");
+                    continue;
+                }
 
-            // Process the test case
-            List<String> results = maxProfit(n);
-
-            // Display results
-            displayResults(n, results);
+                List<Solution> solutions = findOptimalDevelopment(timeUnit);
+                displayResults(timeUnit, solutions);
+            } else {
+                System.out.println("Invalid input. Please enter a valid integer.");
+                scanner.next(); // Consume the invalid input
+            }
         }
 
         scanner.close();
