@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -24,21 +22,16 @@ public class Main {
             this.commercialParks = c;
             this.earnings = e;
         }
-
-        @Override
-        public String toString() {
-            return String.format("T: %d P: %d C: %d", theatres, pubs, commercialParks);
-        }
     }
 
     /**
-     * Finds the optimal development plan for the given time units.
+     * Finds the single optimal development plan for the given time units.
      *
      * @param timeUnits The available time units.
-     * @return {@link List} of {@link Solution} containing the optimal solutions.
+     * @return The optimal {@link Solution}.
      */
-    public static List<Solution> findOptimalDevelopment(int timeUnits) {
-        List<Solution> optimalSolutions = new ArrayList<>();
+    public static Solution findOptimalDevelopment(int timeUnits) {
+        Solution optimalSolution = new Solution(0, 0, 0, 0);
         int maxEarnings = 0;
 
         // Try all possible combinations
@@ -72,35 +65,27 @@ public class Main {
                         }
                     }
 
-                    if (time <= timeUnits) {
-                        if (earnings > maxEarnings) {
-                            maxEarnings = earnings;
-                            optimalSolutions.clear();
-                            optimalSolutions.add(new Solution(t, p, c, earnings));
-                        } else if (earnings == maxEarnings && earnings > 0) {
-                            optimalSolutions.add(new Solution(t, p, c, earnings));
-                        }
+                    if (time <= timeUnits && earnings > maxEarnings) {
+                        maxEarnings = earnings;
+                        optimalSolution = new Solution(t, p, c, earnings);
                     }
                 }
             }
         }
 
-        return optimalSolutions;
+        return optimalSolution;
     }
 
     /**
-     * Displays the optimal solutions for a given time unit.
+     * Displays the optimal solution for a given time unit.
      *
      * @param timeUnit The available time units.
-     * @param solutions {@link List} of {@link Solution} containing the results.
+     * @param solution The optimal {@link Solution}.
      */
-    public static void displayResults(int timeUnit, List<Solution> solutions) {
-        System.out.println("\nFor Time Unit: " + timeUnit);
-        System.out.println("Earnings: $" + (solutions.isEmpty() ? 0 : solutions.get(0).earnings));
-        System.out.println("Solutions:");
-        for (int i = 0; i < solutions.size(); i++) {
-            System.out.println((i + 1) + ". " + solutions.get(i));
-        }
+    public static void displayResult(int timeUnit, Solution solution) {
+        System.out.println("\nTime Unit: " + timeUnit);
+        System.out.println("Earnings: $" + solution.earnings);
+        System.out.println("T: " + solution.theatres + " P: " + solution.pubs + " C: " + solution.commercialParks);
         System.out.println("-----------------------------");
     }
 
@@ -125,8 +110,8 @@ public class Main {
                     continue;
                 }
 
-                List<Solution> solutions = findOptimalDevelopment(timeUnit);
-                displayResults(timeUnit, solutions);
+                Solution solution = findOptimalDevelopment(timeUnit);
+                displayResult(timeUnit, solution);
             } else {
                 System.out.println("Invalid input. Please enter a valid integer.");
                 scanner.next(); // Consume the invalid input
